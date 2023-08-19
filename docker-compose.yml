@@ -1,0 +1,63 @@
+version: "${DOCKER_COMPOSE_VERSION}"
+
+networks: 
+    docker:
+        driver: bridge
+
+services:
+    nginx:
+        image: nginx:alpine
+        container_name: nginx
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "${APP_PORT}:80"
+            - "${APP2_PORT}:81"
+        volumes: 
+            - ./app:/var/www/app
+            - ./nginx/conf.d:/etc/nginx/conf.d
+        depends_on: 
+            - php
+        networks: 
+            - docker
+
+    php:
+        image: php:8.2-fpm-alpine
+        container_name: php
+        restart: unless-stopped
+        tty: true
+        ports: 
+            - "9000:9000"
+        volumes: 
+            - ./app:/var/www/app
+        networks: 
+            - docker
+
+    mysql:
+        image: mysql
+        container_name: mysql
+        restart: unless-stopped
+        tty: true
+        ports: 
+            - "${DB_PORT}:3306"
+        environment: 
+            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD_ROOT}"
+            MYSQL_ALLOW_EMPTY_PASSWORD: true
+        networks: 
+            - docker
+
+    redis:
+        image: redis:alpine
+        container_name: redis
+        ports:
+            - "${REDIS_PORT}:6379"
+        networks: 
+            - docker
+
+    memcached:
+        image: memcached:alpine
+        container_name: memcached
+        ports:
+            - "${MEMCACHED_PORT}:11211"
+        networks: 
+            - docker
